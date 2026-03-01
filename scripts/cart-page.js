@@ -15,14 +15,14 @@ document.addEventListener("DOMContentLoaded", () => {
     hamburger.addEventListener("click", () => {
         const isOpen = navMenu.classList.toggle("active");
         hamburger.setAttribute("aria-expanded", isOpen);
-        hamburger.querySelector(".hamburger__icon").textContent = isOpen ? "✕" : "☰";
+        hamburger.querySelector(".hamburger__icon").innerHTML = isOpen ? '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-close"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
     });
 
     document.addEventListener("click", (e) => {
         if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
             navMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", "false");
-            hamburger.querySelector(".hamburger__icon").textContent = "☰";
+            hamburger.querySelector(".hamburger__icon").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
         }
     });
 
@@ -241,11 +241,58 @@ document.addEventListener("DOMContentLoaded", () => {
             alert("Your cart is empty!");
             return;
         }
+
+        // Require login for checkout
+        const user = firebase.auth().currentUser;
+        if (!user) {
+            alert("Please log in to proceed to checkout.");
+            window.location.href = "login.html";
+            return;
+        }
+
         window.location.href = "checkout.html";
     });
 
     // ========================================
-    // 8. INITIALIZE
+    // 8. FIREBASE AUTH STATE (nav update)
+    // ========================================
+
+    function updateNavForAuth(user) {
+        const authNavItem = document.getElementById("authNavItem");
+        if (!authNavItem) return;
+
+        if (user) {
+            const displayName = user.displayName || user.email.split("@")[0];
+            authNavItem.innerHTML = `
+                <span class="nav__user-greeting">Hi, ${displayName}</span>
+                <button class="nav__logout-btn" id="logoutBtn" aria-label="Log out">Logout</button>
+            `;
+
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", async () => {
+                    try {
+                        await firebase.auth().signOut();
+                        localStorage.removeItem("currentUser");
+                        window.location.href = "login.html";
+                    } catch (error) {
+                        console.error("Logout error:", error);
+                    }
+                });
+            }
+        } else {
+            authNavItem.innerHTML = `<a href="login.html" class="nav__link">Login</a>`;
+        }
+    }
+
+    if (typeof firebase !== "undefined") {
+        firebase.auth().onAuthStateChanged((user) => {
+            updateNavForAuth(user);
+        });
+    }
+
+    // ========================================
+    // 9. INITIALIZE
     // ========================================
     Cart.updateCartCount();
     renderCart();

@@ -4,10 +4,17 @@
   "description": "Basic frontend project initialized with Git and npm.",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build:js": "terser scripts/app.js -o scripts/app.min.js -c drop_console=true -m && terser scripts/product.js -o scripts/product.min.js -c drop_console=true -m && terser scripts/cart.js -o scripts/cart.min.js -c drop_console=true -m && terser scripts/cart-page.js -o scripts/cart-page.min.js -c drop_console=true -m && terser scripts/auth.js -o scripts/auth.min.js -c drop_console=true -m",
+    "build:css": "cleancss -o styles/main.min.css styles/main.css",
+    "build": "npm run build:js && npm run build:css"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
+  "devDependencies": {
+    "clean-css-cli": "^5.6.3",
+    "terser": "^5.46.0"
+  }
 }

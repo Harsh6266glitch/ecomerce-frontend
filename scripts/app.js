@@ -16,14 +16,14 @@ document.addEventListener("DOMContentLoaded", () => {
     hamburger.addEventListener("click", () => {
         const isOpen = navMenu.classList.toggle("active");
         hamburger.setAttribute("aria-expanded", isOpen);
-        hamburger.querySelector(".hamburger__icon").textContent = isOpen ? "✕" : "☰";
+        hamburger.querySelector(".hamburger__icon").innerHTML = isOpen ? '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-close"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
     });
 
     navLinks.forEach((link) => {
         link.addEventListener("click", () => {
             navMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", "false");
-            hamburger.querySelector(".hamburger__icon").textContent = "☰";
+            hamburger.querySelector(".hamburger__icon").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
             navLinks.forEach((l) => l.classList.remove("active"));
             link.classList.add("active");
         });
@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
             navMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", "false");
-            hamburger.querySelector(".hamburger__icon").textContent = "☰";
+            hamburger.querySelector(".hamburger__icon").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
         }
     });
 
@@ -84,7 +84,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const image = document.createElement("img");
         image.classList.add("product-card__image");
-        image.src = product.image;
+        // Lazy loading observer data
+        image.dataset.src = `https://images.weserv.nl/?url=${encodeURIComponent(product.image)}&output=webp&w=800`;
+        image.dataset.srcset = `
+            https://images.weserv.nl/?url=${encodeURIComponent(product.image)}&output=webp&w=400 400w,
+            https://images.weserv.nl/?url=${encodeURIComponent(product.image)}&output=webp&w=800 800w
+        `;
+        // Provide a tiny placeholder
+        image.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E`;
+        image.width = 400;
+        image.height = 400;
         image.alt = product.title;
         image.loading = "lazy";
         image.decoding = "async";
@@ -171,13 +180,29 @@ document.addEventListener("DOMContentLoaded", () => {
         showLoading();
 
         try {
-            const response = await fetch(API_URL);
+            // Check cache first
+            const cachedData = localStorage.getItem("cached_products");
+            const cacheTimestamp = localStorage.getItem("cached_products_timestamp");
+            const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp, 10) : Infinity;
 
-            if (!response.ok) {
-                throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+            let products;
+
+            // Use cache if under 1 hour old (3600000 ms)
+            if (cachedData && cacheAge < 3600000) {
+                products = JSON.parse(cachedData);
+            } else {
+                const response = await fetch(API_URL);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                }
+
+                products = await response.json();
+
+                // Save to cache
+                localStorage.setItem("cached_products", JSON.stringify(products));
+                localStorage.setItem("cached_products_timestamp", Date.now().toString());
             }
-
-            const products = await response.json();
 
             if (productLoader) productLoader.style.display = "none";
             productGrid.innerHTML = "";
@@ -186,15 +211,44 @@ document.addEventListener("DOMContentLoaded", () => {
                 throw new Error("No products returned from API.");
             }
 
+            const fragment = document.createDocumentFragment();
             products.forEach((product, index) => {
                 const card = createProductCard(product, index);
-                productGrid.appendChild(card);
+                fragment.appendChild(card);
             });
+            productGrid.appendChild(fragment);
 
-            console.log(`✅ Successfully loaded ${products.length} products`);
+            // Implement Intersection Observer Lazy Loading
+            if ("IntersectionObserver" in window) {
+                const lazyImageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const lazyImage = entry.target;
+                            if (lazyImage.dataset.src) {
+                                lazyImage.src = lazyImage.dataset.src;
+                            }
+                            if (lazyImage.dataset.srcset) {
+                                lazyImage.srcset = lazyImage.dataset.srcset;
+                            }
+                            lazyImage.classList.add("loaded");
+                            observer.unobserve(lazyImage);
+                        }
+                    });
+                }, {
+                    rootMargin: "0px 0px 50px 0px"
+                });
+
+                document.querySelectorAll(".product-card__image").forEach(lazyImage => {
+                    lazyImageObserver.observe(lazyImage);
+                });
+            } else {
+                document.querySelectorAll(".product-card__image").forEach(lazyImage => {
+                    lazyImage.src = lazyImage.dataset.src;
+                    lazyImage.srcset = lazyImage.dataset.srcset;
+                });
+            }
 
         } catch (error) {
-            console.error("❌ Failed to fetch products:", error.message);
             showError();
         }
     }
@@ -226,9 +280,46 @@ document.addEventListener("DOMContentLoaded", () => {
         Cart.addToCart(item);
         Cart.showAddedFeedback(btn, null);
     });
+    // ========================================
+    // 3. FIREBASE AUTH STATE (nav update)
+    // ========================================
+
+    function updateNavForAuth(user) {
+        const authNavItem = document.getElementById("authNavItem");
+        if (!authNavItem) return;
+
+        if (user) {
+            const displayName = user.displayName || user.email.split("@")[0];
+            authNavItem.innerHTML = `
+                <span class="nav__user-greeting">Hi, ${displayName}</span>
+                <button class="nav__logout-btn" id="logoutBtn" aria-label="Log out">Logout</button>
+            `;
+
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", async () => {
+                    try {
+                        await firebase.auth().signOut();
+                        localStorage.removeItem("currentUser");
+                        window.location.href = "login.html";
+                    } catch (error) {
+                        console.error("Logout error:", error);
+                    }
+                });
+            }
+        } else {
+            authNavItem.innerHTML = `<a href="login.html" class="nav__link">Login</a>`;
+        }
+    }
+
+    if (typeof firebase !== "undefined") {
+        firebase.auth().onAuthStateChanged((user) => {
+            updateNavForAuth(user);
+        });
+    }
 
     // ========================================
-    // 3. INITIALIZE
+    // 4. INITIALIZE
     // ========================================
     Cart.updateCartCount();
     fetchProducts();

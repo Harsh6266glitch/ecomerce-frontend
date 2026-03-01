@@ -16,14 +16,14 @@ document.addEventListener("DOMContentLoaded", () => {
     hamburger.addEventListener("click", () => {
         const isOpen = navMenu.classList.toggle("active");
         hamburger.setAttribute("aria-expanded", isOpen);
-        hamburger.querySelector(".hamburger__icon").textContent = isOpen ? "✕" : "☰";
+        hamburger.querySelector(".hamburger__icon").innerHTML = isOpen ? '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-close"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' : '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
     });
 
     navLinks.forEach((link) => {
         link.addEventListener("click", () => {
             navMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", "false");
-            hamburger.querySelector(".hamburger__icon").textContent = "☰";
+            hamburger.querySelector(".hamburger__icon").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
         });
     });
 
@@ -31,7 +31,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!hamburger.contains(e.target) && !navMenu.contains(e.target)) {
             navMenu.classList.remove("active");
             hamburger.setAttribute("aria-expanded", "false");
-            hamburger.querySelector(".hamburger__icon").textContent = "☰";
+            hamburger.querySelector(".hamburger__icon").innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon-menu"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>';
         }
     });
 
@@ -183,7 +183,35 @@ document.addEventListener("DOMContentLoaded", () => {
         document.title = `${product.title} — E-Shop`;
         breadcrumbTitle.textContent = product.title;
 
-        detailImage.src = product.image;
+        // Optimized WebP via Proxy
+        detailImage.dataset.src = `https://images.weserv.nl/?url=${encodeURIComponent(product.image)}&output=webp&w=800`;
+        detailImage.dataset.srcset = `
+            https://images.weserv.nl/?url=${encodeURIComponent(product.image)}&output=webp&w=400 400w,
+            https://images.weserv.nl/?url=${encodeURIComponent(product.image)}&output=webp&w=800 800w,
+            https://images.weserv.nl/?url=${encodeURIComponent(product.image)}&output=webp&w=1200 1200w
+        `;
+        detailImage.src = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3C/svg%3E`;
+        detailImage.width = 800;
+        detailImage.height = 800;
+
+        // Native intersection fallback logic
+        if ("IntersectionObserver" in window) {
+            const observer = new IntersectionObserver((entries, obs) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const img = entry.target;
+                        img.src = img.dataset.src;
+                        img.srcset = img.dataset.srcset;
+                        obs.unobserve(img);
+                    }
+                });
+            });
+            observer.observe(detailImage);
+        } else {
+            detailImage.src = detailImage.dataset.src;
+            detailImage.srcset = detailImage.dataset.srcset;
+        }
+
         detailImage.alt = product.title;
 
         document.getElementById("detailCategory").textContent = product.category;
@@ -230,36 +258,88 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (!productId) {
             showError();
-            console.error("❌ No product ID in URL.");
             return;
         }
 
         showLoading();
 
         try {
-            const response = await fetch(`${API_BASE}/${productId}`);
+            // Check cache first
+            const cacheKey = `cached_product_${productId}`;
+            const cachedData = localStorage.getItem(cacheKey);
+            const cacheTimestamp = localStorage.getItem(`${cacheKey}_timestamp`);
+            const cacheAge = cacheTimestamp ? Date.now() - parseInt(cacheTimestamp, 10) : Infinity;
 
-            if (!response.ok) {
-                throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
-            }
+            let product;
 
-            const product = await response.json();
+            // Use cache if under 1 hour old (3600000 ms)
+            if (cachedData && cacheAge < 3600000) {
+                product = JSON.parse(cachedData);
+            } else {
+                const response = await fetch(`${API_BASE}/${productId}`);
 
-            if (!product || !product.id) {
-                throw new Error("Invalid product data received.");
+                if (!response.ok) {
+                    throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
+                }
+
+                product = await response.json();
+
+                if (!product || !product.id) {
+                    throw new Error("Invalid product data received.");
+                }
+
+                // Save to cache
+                localStorage.setItem(cacheKey, JSON.stringify(product));
+                localStorage.setItem(`${cacheKey}_timestamp`, Date.now().toString());
             }
 
             renderProduct(product);
-            console.log(`✅ Loaded: ${product.title}`);
 
         } catch (error) {
-            console.error("❌ Fetch failed:", error.message);
             showError();
         }
     }
 
     // ========================================
-    // 6. INITIALIZE
+    // 6. FIREBASE AUTH STATE (nav update)
+    // ========================================
+
+    function updateNavForAuth(user) {
+        const authNavItem = document.getElementById("authNavItem");
+        if (!authNavItem) return;
+
+        if (user) {
+            const displayName = user.displayName || user.email.split("@")[0];
+            authNavItem.innerHTML = `
+                <span class="nav__user-greeting">Hi, ${displayName}</span>
+                <button class="nav__logout-btn" id="logoutBtn" aria-label="Log out">Logout</button>
+            `;
+
+            const logoutBtn = document.getElementById("logoutBtn");
+            if (logoutBtn) {
+                logoutBtn.addEventListener("click", async () => {
+                    try {
+                        await firebase.auth().signOut();
+                        localStorage.removeItem("currentUser");
+                        window.location.href = "login.html";
+                    } catch (error) {
+                        console.error("Logout error:", error);
+                    }
+                });
+            }
+        } else {
+            authNavItem.innerHTML = `<a href="login.html" class="nav__link">Login</a>`;
+        }
+    }
+
+    if (typeof firebase !== "undefined") {
+        firebase.auth().onAuthStateChanged((user) => {
+            updateNavForAuth(user);
+        });
+    }
+
+    // ========================================
+    // 7. INITIALIZE
     // ========================================
     Cart.updateCartCount();
     fetchProduct();
