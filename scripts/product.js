@@ -1,5 +1,6 @@
 // ========================================
 // E-Commerce Frontend — Product Detail JS
+// Advanced Interactive Features
 // ========================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -51,20 +52,17 @@ document.addEventListener("DOMContentLoaded", () => {
         localStorage.setItem("eshop_cart", JSON.stringify(cart));
     }
 
-    function addToCart(product) {
+    function addToCart(item) {
         const cart = getCart();
-        const existing = cart.find((item) => item.id === product.id);
+        const key = `${item.id}-${item.size}-${item.color}`;
+        const existing = cart.find(
+            (c) => c.id === item.id && c.size === item.size && c.color === item.color
+        );
 
         if (existing) {
-            existing.quantity += 1;
+            existing.quantity += item.quantity;
         } else {
-            cart.push({
-                id: product.id,
-                title: product.title,
-                price: product.price,
-                image: product.image,
-                quantity: 1,
-            });
+            cart.push({ ...item, key });
         }
 
         saveCart(cart);
@@ -72,8 +70,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function getCartCount() {
-        const cart = getCart();
-        return cart.reduce((sum, item) => sum + item.quantity, 0);
+        return getCart().reduce((sum, item) => sum + item.quantity, 0);
     }
 
     function updateCartBadge() {
@@ -86,7 +83,127 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // ========================================
-    // 3. PRODUCT DETAIL — Fetch & Render
+    // 3. IMAGE ZOOM — Mouse-Tracking
+    // ========================================
+
+    const imageWrapper = document.getElementById("imageZoomWrapper");
+    const detailImage = document.getElementById("detailImage");
+
+    function isMobile() {
+        return window.innerWidth <= 768;
+    }
+
+    if (imageWrapper && detailImage) {
+        // Track mouse position for zoom origin
+        imageWrapper.addEventListener("mousemove", (e) => {
+            if (isMobile()) return;
+
+            const rect = imageWrapper.getBoundingClientRect();
+            const x = ((e.clientX - rect.left) / rect.width) * 100;
+            const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+            detailImage.style.transformOrigin = `${x}% ${y}%`;
+        });
+
+        // Reset on leave
+        imageWrapper.addEventListener("mouseleave", () => {
+            detailImage.style.transformOrigin = "center center";
+        });
+    }
+
+    // ========================================
+    // 4. VARIATION SELECTORS
+    // ========================================
+
+    let selectedSize = "S";
+    let selectedColor = "Black";
+
+    // ---- Size Variation ----
+    const sizeButtons = document.querySelectorAll(
+        "#variationSize .variation__btn--size"
+    );
+
+    sizeButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            if (btn.disabled) return;
+
+            sizeButtons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            selectedSize = btn.dataset.value;
+
+            console.log(`📏 Size selected: ${selectedSize}`);
+        });
+    });
+
+    // ---- Color Variation ----
+    const colorButtons = document.querySelectorAll(
+        "#variationColor .variation__btn--color"
+    );
+
+    colorButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+            if (btn.disabled) return;
+
+            colorButtons.forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            selectedColor = btn.dataset.value;
+
+            console.log(`🎨 Color selected: ${selectedColor}`);
+        });
+    });
+
+    // ========================================
+    // 5. QUANTITY SELECTOR
+    // ========================================
+
+    const MIN_QTY = 1;
+    const MAX_QTY = 10;
+    let quantity = 1;
+    let basePrice = 0;
+
+    const qtyMinus = document.getElementById("qtyMinus");
+    const qtyPlus = document.getElementById("qtyPlus");
+    const qtyValue = document.getElementById("qtyValue");
+    const totalPriceEl = document.getElementById("detailTotalPrice");
+
+    function updateQuantityDisplay() {
+        qtyValue.textContent = quantity;
+
+        // Disable buttons at limits
+        qtyMinus.disabled = quantity <= MIN_QTY;
+        qtyMinus.style.opacity = quantity <= MIN_QTY ? "0.35" : "1";
+        qtyPlus.disabled = quantity >= MAX_QTY;
+        qtyPlus.style.opacity = quantity >= MAX_QTY ? "0.35" : "1";
+    }
+
+    function updateTotalPrice() {
+        const total = (basePrice * quantity).toFixed(2);
+        totalPriceEl.textContent = `$${total}`;
+
+        // Price bump animation
+        totalPriceEl.classList.remove("price-bump");
+        void totalPriceEl.offsetWidth; // Trigger reflow
+        totalPriceEl.classList.add("price-bump");
+    }
+
+    qtyMinus.addEventListener("click", () => {
+        if (quantity > MIN_QTY) {
+            quantity--;
+            updateQuantityDisplay();
+            updateTotalPrice();
+        }
+    });
+
+    qtyPlus.addEventListener("click", () => {
+        if (quantity < MAX_QTY) {
+            quantity++;
+            updateQuantityDisplay();
+            updateTotalPrice();
+        }
+    });
+
+    // ========================================
+    // 6. PRODUCT DETAIL — Fetch & Render
     // ========================================
 
     const API_BASE = "https://fakestoreapi.com/products";
@@ -96,13 +213,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const detailContent = document.getElementById("detailContent");
     const breadcrumbTitle = document.getElementById("breadcrumbTitle");
 
-    // ---- Get Product ID from URL ----
     function getProductIdFromURL() {
-        const params = new URLSearchParams(window.location.search);
-        return params.get("id");
+        return new URLSearchParams(window.location.search).get("id");
     }
 
-    // ---- Generate Stars ----
     function generateStars(rate) {
         const full = Math.floor(rate);
         const half = rate % 1 >= 0.5 ? 1 : 0;
@@ -110,7 +224,6 @@ document.addEventListener("DOMContentLoaded", () => {
         return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(empty);
     }
 
-    // ---- Show States ----
     function showLoading() {
         detailLoader.style.display = "";
         detailError.style.display = "none";
@@ -129,18 +242,22 @@ document.addEventListener("DOMContentLoaded", () => {
         detailContent.style.display = "";
     }
 
-    // ---- Render Product ----
+    // ---- Store current product data ----
+    let currentProduct = null;
+
     function renderProduct(product) {
-        // Update page title
+        currentProduct = product;
+        basePrice = product.price;
+
+        // Page title
         document.title = `${product.title} — E-Shop`;
 
         // Breadcrumb
         breadcrumbTitle.textContent = product.title;
 
         // Image
-        const image = document.getElementById("detailImage");
-        image.src = product.image;
-        image.alt = product.title;
+        detailImage.src = product.image;
+        detailImage.alt = product.title;
 
         // Category
         document.getElementById("detailCategory").textContent = product.category;
@@ -160,29 +277,53 @@ document.addEventListener("DOMContentLoaded", () => {
         // Description
         document.getElementById("detailDescription").textContent = product.description;
 
-        // Add to Cart button
+        // Initialize quantity & total
+        quantity = 1;
+        updateQuantityDisplay();
+        updateTotalPrice();
+
+        // ---- Add to Cart Button ----
         const addBtn = document.getElementById("detailAddBtn");
         const confirmation = document.getElementById("detailConfirmation");
 
         addBtn.addEventListener("click", () => {
-            addToCart(product);
+            // Build cart item with variations
+            const cartItem = {
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                image: product.image,
+                size: selectedSize,
+                color: selectedColor,
+                quantity: quantity,
+                totalPrice: parseFloat((product.price * quantity).toFixed(2)),
+            };
+
+            addToCart(cartItem);
 
             // Visual feedback
             addBtn.textContent = "✓ Added to Cart!";
             addBtn.classList.add("detail__add-btn--added");
-            confirmation.style.display = "block";
+            addBtn.disabled = true;
+
+            confirmation.style.display = "flex";
+            confirmation.style.gap = "8px";
+            confirmation.style.alignItems = "center";
+
+            console.log("🛒 Added to cart:", cartItem);
 
             setTimeout(() => {
                 addBtn.textContent = "🛒 Add to Cart";
                 addBtn.classList.remove("detail__add-btn--added");
+                addBtn.disabled = false;
                 confirmation.style.display = "none";
-            }, 2000);
+            }, 2500);
         });
 
         showContent();
     }
 
-    // ---- Fetch Product ----
+    // ---- Fetch Single Product ----
     async function fetchProduct() {
         const productId = getProductIdFromURL();
 
@@ -216,7 +357,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
 
-    // ---- Initialize ----
+    // ========================================
+    // 7. INITIALIZE
+    // ========================================
     updateCartBadge();
     fetchProduct();
 });

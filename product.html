@@ -87,9 +87,13 @@
             <!-- Product Content (hidden until loaded) -->
             <div class="detail__content" id="detailContent" style="display:none;">
 
-                <!-- Left: Image -->
-                <div class="detail__image-wrapper">
-                    <img class="detail__image" id="detailImage" src="" alt="" loading="lazy">
+                <!-- Left: Image with Zoom -->
+                <div class="detail__image-container">
+                    <div class="detail__image-wrapper" id="imageZoomWrapper">
+                        <img class="detail__image" id="detailImage" src="" alt="" loading="lazy">
+                        <div class="detail__zoom-lens" id="zoomLens"></div>
+                    </div>
+                    <p class="detail__zoom-hint">🔍 Hover to zoom</p>
                 </div>
 
                 <!-- Right: Info -->
@@ -105,6 +109,61 @@
                     <p class="detail__price" id="detailPrice"></p>
                     <p class="detail__description" id="detailDescription"></p>
 
+                    <!-- Variations: Size -->
+                    <div class="variation" id="variationSize">
+                        <label class="variation__label">Size</label>
+                        <div class="variation__options">
+                            <button class="variation__btn variation__btn--size active" data-value="S">S</button>
+                            <button class="variation__btn variation__btn--size" data-value="M">M</button>
+                            <button class="variation__btn variation__btn--size" data-value="L">L</button>
+                            <button class="variation__btn variation__btn--size variation__btn--disabled" data-value="XL"
+                                disabled>XL</button>
+                        </div>
+                    </div>
+
+                    <!-- Variations: Color -->
+                    <div class="variation" id="variationColor">
+                        <label class="variation__label">Color</label>
+                        <div class="variation__options">
+                            <button class="variation__btn variation__btn--color active" data-value="Black"
+                                style="--swatch-color: #1a1a2e;" title="Black">
+                                <span class="color-swatch"></span> Black
+                            </button>
+                            <button class="variation__btn variation__btn--color" data-value="Blue"
+                                style="--swatch-color: #3498db;" title="Blue">
+                                <span class="color-swatch"></span> Blue
+                            </button>
+                            <button class="variation__btn variation__btn--color" data-value="Red"
+                                style="--swatch-color: #e74c3c;" title="Red">
+                                <span class="color-swatch"></span> Red
+                            </button>
+                            <button class="variation__btn variation__btn--color variation__btn--disabled"
+                                data-value="Yellow" style="--swatch-color: #f1c40f;" title="Yellow (Unavailable)"
+                                disabled>
+                                <span class="color-swatch"></span> Yellow
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Quantity Selector -->
+                    <div class="quantity-selector">
+                        <label class="quantity-selector__label">Quantity</label>
+                        <div class="quantity-selector__controls">
+                            <button class="quantity-selector__btn" id="qtyMinus"
+                                aria-label="Decrease quantity">−</button>
+                            <span class="quantity-selector__value" id="qtyValue">1</span>
+                            <button class="quantity-selector__btn" id="qtyPlus"
+                                aria-label="Increase quantity">+</button>
+                        </div>
+                    </div>
+
+                    <!-- Total Price -->
+                    <div class="detail__total">
+                        <span class="detail__total-label">Total:</span>
+                        <span class="detail__total-price" id="detailTotalPrice">$0.00</span>
+                    </div>
+
+                    <!-- Actions -->
                     <div class="detail__actions">
                         <button class="detail__add-btn" id="detailAddBtn">
                             🛒 Add to Cart
@@ -116,7 +175,8 @@
 
                     <!-- Cart confirmation -->
                     <div class="detail__confirmation" id="detailConfirmation" style="display:none;">
-                        ✅ Item added to cart!
+                        <span class="confirmation__icon">✅</span>
+                        <span class="confirmation__text">Item added to cart!</span>
                     </div>
                 </div>
             </div>
