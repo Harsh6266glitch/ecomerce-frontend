@@ -849,6 +849,36 @@ button {
     transform: translateY(-2px);
 }
 
+/* ---- Product Description ---- */
+.product-card__description {
+    font-size: 0.82rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+    margin: 0;
+}
+
+/* ---- Loading Text ---- */
+.product-grid__loading-text {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 60px 24px;
+    font-size: 1.1rem;
+    color: var(--color-text-muted);
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.4;
+    }
+}
+
 /* ========================================
    RESPONSIVE — TABLET & MOBILE
    ======================================== */
