@@ -118,6 +118,34 @@
             </div>
 
         </section>
+
+        <!-- ====== PRODUCTS SECTION ====== -->
+        <section class="products" id="products">
+            <div class="products__container">
+                <div class="products__header">
+                    <h2 class="products__title">Our <span class="highlight">Products</span></h2>
+                    <p class="products__subtitle">Explore our curated collection of premium items</p>
+                </div>
+
+                <!-- Loading skeleton (shown while fetching) -->
+                <div class="product-grid__loader" id="productLoader">
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                    <div class="skeleton-card"></div>
+                </div>
+
+                <!-- Error message (hidden by default) -->
+                <div class="product-grid__error" id="productError" style="display:none;">
+                    <p>⚠️ Failed to load products. Please try again later.</p>
+                    <button class="error__retry-btn" id="retryBtn">Retry</button>
+                </div>
+
+                <!-- Product cards rendered here by JS -->
+                <div class="product-grid" id="productGrid"></div>
+            </div>
+        </section>
+
     </main>
 
     <script src="scripts/app.js"></script>
