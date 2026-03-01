@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up — E-Shop</title>
+    <meta name="description" content="Create a new E-Shop account to start shopping.">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ====== HEADER ====== -->
+    <header class="header">
+        <div class="header__container">
+            <a href="index.html" class="header__logo">
+                <span class="logo-icon">🛍️</span>
+                <span class="logo-text">E-Shop</span>
+            </a>
+            <nav class="header__nav" id="navMenu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
+                    <li class="nav__item"><a href="index.html#products" class="nav__link">Products</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">About</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="header__actions">
+                <a href="cart.html" class="cart" aria-label="Shopping cart">
+                    <span class="cart__icon">🛒</span>
+                    <span class="cart__badge" id="cartBadge">0</span>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                    <span class="hamburger__icon">☰</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ====== SIGNUP PAGE ====== -->
+    <main class="main">
+        <section class="auth-page">
+            <div class="auth-card">
+
+                <!-- Card Header -->
+                <div class="auth-card__header">
+                    <h1 class="auth-card__title">Create Account</h1>
+                    <p class="auth-card__subtitle">Join E-Shop and start shopping</p>
+                </div>
+
+                <!-- Signup Form -->
+                <form class="auth-form" id="signupForm" novalidate>
+
+                    <!-- Full Name -->
+                    <div class="form-group">
+                        <label class="form-group__label" for="signupName">Full Name</label>
+                        <div class="form-group__input-wrapper">
+                            <span class="form-group__icon">👤</span>
+                            <input type="text" class="form-group__input" id="signupName" placeholder="John Doe"
+                                autocomplete="name" required>
+                        </div>
+                        <span class="form-group__error" id="signupNameError"></span>
+                    </div>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label class="form-group__label" for="signupEmail">Email Address</label>
+                        <div class="form-group__input-wrapper">
+                            <span class="form-group__icon">📧</span>
+                            <input type="email" class="form-group__input" id="signupEmail" placeholder="you@example.com"
+                                autocomplete="email" required>
+                        </div>
+                        <span class="form-group__error" id="signupEmailError"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label class="form-group__label" for="signupPassword">Password</label>
+                        <div class="form-group__input-wrapper">
+                            <span class="form-group__icon">🔒</span>
+                            <input type="password" class="form-group__input" id="signupPassword"
+                                placeholder="Min 8 characters" autocomplete="new-password" required>
+                            <button type="button" class="form-group__toggle-pw" id="toggleSignupPw"
+                                aria-label="Toggle password visibility">
+                                👁️
+                            </button>
+                        </div>
+                        <span class="form-group__error" id="signupPasswordError"></span>
+
+                        <!-- Password Strength Rules -->
+                        <div class="pw-rules" id="pwRules">
+                            <div class="pw-rule" id="ruleLength"><span class="pw-rule__icon">○</span> At least 8
+                                characters</div>
+                            <div class="pw-rule" id="ruleUpper"><span class="pw-rule__icon">○</span> At least 1
+                                uppercase letter</div>
+                            <div class="pw-rule" id="ruleLower"><span class="pw-rule__icon">○</span> At least 1
+                                lowercase letter</div>
+                            <div class="pw-rule" id="ruleNumber"><span class="pw-rule__icon">○</span> At least 1 number
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Confirm Password -->
+                    <div class="form-group">
+                        <label class="form-group__label" for="signupConfirm">Confirm Password</label>
+                        <div class="form-group__input-wrapper">
+                            <span class="form-group__icon">🔒</span>
+                            <input type="password" class="form-group__input" id="signupConfirm"
+                                placeholder="Re-enter your password" autocomplete="new-password" required>
+                            <button type="button" class="form-group__toggle-pw" id="toggleSignupConfirm"
+                                aria-label="Toggle password visibility">
+                                👁️
+                            </button>
+                        </div>
+                        <span class="form-group__error" id="signupConfirmError"></span>
+                    </div>
+
+                    <!-- Global Error / Success -->
+                    <div class="auth-form__message auth-form__message--error" id="signupGlobalError"
+                        style="display:none;"></div>
+                    <div class="auth-form__message auth-form__message--success" id="signupGlobalSuccess"
+                        style="display:none;"></div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="auth-form__submit-btn" id="signupBtn">
+                        Create Account
+                    </button>
+
+                </form>
+
+                <!-- Footer -->
+                <div class="auth-card__footer">
+                    <p>Already have an account? <a href="login.html" class="auth-card__link">Log In</a></p>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <script src="scripts/cart.js"></script>
+    <script src="scripts/auth.js"></script>
+</body>
+
+</html>

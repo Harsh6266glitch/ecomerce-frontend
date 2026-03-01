@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — E-Shop</title>
+    <meta name="description" content="Log in to your E-Shop account to manage orders and shopping cart.">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ====== HEADER ====== -->
+    <header class="header">
+        <div class="header__container">
+            <a href="index.html" class="header__logo">
+                <span class="logo-icon">🛍️</span>
+                <span class="logo-text">E-Shop</span>
+            </a>
+            <nav class="header__nav" id="navMenu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
+                    <li class="nav__item"><a href="index.html#products" class="nav__link">Products</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">About</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">Contact</a></li>
+                </ul>
+            </nav>
+            <div class="header__actions">
+                <a href="cart.html" class="cart" aria-label="Shopping cart">
+                    <span class="cart__icon">🛒</span>
+                    <span class="cart__badge" id="cartBadge">0</span>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                    <span class="hamburger__icon">☰</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ====== LOGIN PAGE ====== -->
+    <main class="main">
+        <section class="auth-page">
+            <div class="auth-card">
+
+                <!-- Card Header -->
+                <div class="auth-card__header">
+                    <h1 class="auth-card__title">Welcome Back</h1>
+                    <p class="auth-card__subtitle">Log in to your account</p>
+                </div>
+
+                <!-- Login Form -->
+                <form class="auth-form" id="loginForm" novalidate>
+
+                    <!-- Email -->
+                    <div class="form-group">
+                        <label class="form-group__label" for="loginEmail">Email Address</label>
+                        <div class="form-group__input-wrapper">
+                            <span class="form-group__icon">📧</span>
+                            <input type="email" class="form-group__input" id="loginEmail" placeholder="you@example.com"
+                                autocomplete="email" required>
+                        </div>
+                        <span class="form-group__error" id="loginEmailError"></span>
+                    </div>
+
+                    <!-- Password -->
+                    <div class="form-group">
+                        <label class="form-group__label" for="loginPassword">Password</label>
+                        <div class="form-group__input-wrapper">
+                            <span class="form-group__icon">🔒</span>
+                            <input type="password" class="form-group__input" id="loginPassword"
+                                placeholder="Enter your password" autocomplete="current-password" required>
+                            <button type="button" class="form-group__toggle-pw" id="toggleLoginPw"
+                                aria-label="Toggle password visibility">
+                                👁️
+                            </button>
+                        </div>
+                        <span class="form-group__error" id="loginPasswordError"></span>
+                    </div>
+
+                    <!-- Forgot Password -->
+                    <div class="auth-form__options">
+                        <a href="#" class="auth-form__forgot"
+                            onclick="alert('Password reset is not available in this demo.')">Forgot Password?</a>
+                    </div>
+
+                    <!-- Global Error -->
+                    <div class="auth-form__message auth-form__message--error" id="loginGlobalError"
+                        style="display:none;"></div>
+
+                    <!-- Submit -->
+                    <button type="submit" class="auth-form__submit-btn" id="loginBtn">
+                        Log In
+                    </button>
+
+                </form>
+
+                <!-- Footer -->
+                <div class="auth-card__footer">
+                    <p>Don't have an account? <a href="signup.html" class="auth-card__link">Sign Up</a></p>
+                </div>
+
+            </div>
+        </section>
+    </main>
+
+    <script src="scripts/cart.js"></script>
+    <script src="scripts/auth.js"></script>
+</body>
+
+</html>
