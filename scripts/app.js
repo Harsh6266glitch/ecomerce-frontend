@@ -1,5 +1,5 @@
 // ========================================
-// E-Commerce Frontend — App JS
+// E-Commerce Frontend — App JS (index.html)
 // ========================================
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -37,7 +37,58 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     // ========================================
-    // 2. PRODUCT GRID — Fetch & Render
+    // 2. CART — LocalStorage Helpers
+    // ========================================
+
+    function getCart() {
+        try {
+            const cart = JSON.parse(localStorage.getItem("eshop_cart"));
+            return Array.isArray(cart) ? cart : [];
+        } catch {
+            return [];
+        }
+    }
+
+    function saveCart(cart) {
+        localStorage.setItem("eshop_cart", JSON.stringify(cart));
+    }
+
+    function addToCart(product) {
+        const cart = getCart();
+        const existing = cart.find((item) => item.id === product.id);
+
+        if (existing) {
+            existing.quantity += 1;
+        } else {
+            cart.push({
+                id: product.id,
+                title: product.title,
+                price: product.price,
+                image: product.image,
+                quantity: 1,
+            });
+        }
+
+        saveCart(cart);
+        updateCartBadge();
+    }
+
+    function getCartCount() {
+        const cart = getCart();
+        return cart.reduce((sum, item) => sum + item.quantity, 0);
+    }
+
+    function updateCartBadge() {
+        const badge = document.querySelector(".cart__badge");
+        if (badge) {
+            const count = getCartCount();
+            badge.textContent = count;
+            badge.style.display = count > 0 ? "flex" : "none";
+        }
+    }
+
+    // ========================================
+    // 3. PRODUCT GRID — Fetch & Render
     // ========================================
 
     const API_URL = "https://fakestoreapi.com/products";
@@ -62,44 +113,49 @@ document.addEventListener("DOMContentLoaded", () => {
         return "★".repeat(full) + (half ? "½" : "") + "☆".repeat(empty);
     }
 
-    // ---- Create a Single Product Card (using document.createElement) ----
+    // ---- Create a Single Product Card ----
     function createProductCard(product, index) {
 
-        // Card wrapper
+        // Card wrapper — clickable link to product detail
         const card = document.createElement("div");
         card.classList.add("product-card");
         card.style.animationDelay = `${index * 0.07}s`;
+        card.dataset.productId = product.id;
 
-        // --- Image Wrapper ---
-        const imageWrapper = document.createElement("div");
-        imageWrapper.classList.add("product-card__image-wrapper");
+        // --- Image Wrapper (clickable) ---
+        const imageLink = document.createElement("a");
+        imageLink.href = `product.html?id=${product.id}`;
+        imageLink.classList.add("product-card__image-wrapper");
 
-        // Category badge
         const categoryBadge = document.createElement("span");
         categoryBadge.classList.add("product-card__category");
         categoryBadge.textContent = product.category;
 
-        // Product image
         const image = document.createElement("img");
         image.classList.add("product-card__image");
         image.src = product.image;
         image.alt = product.title;
-        image.loading = "lazy";           // Lazy loading for performance
+        image.loading = "lazy";
         image.decoding = "async";
 
-        imageWrapper.appendChild(categoryBadge);
-        imageWrapper.appendChild(image);
+        imageLink.appendChild(categoryBadge);
+        imageLink.appendChild(image);
 
         // --- Card Body ---
         const body = document.createElement("div");
         body.classList.add("product-card__body");
 
-        // Title
+        // Title (clickable)
+        const titleLink = document.createElement("a");
+        titleLink.href = `product.html?id=${product.id}`;
+        titleLink.classList.add("product-card__title-link");
+
         const title = document.createElement("h3");
         title.classList.add("product-card__title");
         title.textContent = product.title;
+        titleLink.appendChild(title);
 
-        // Description (truncated)
+        // Description
         const description = document.createElement("p");
         description.classList.add("product-card__description");
         description.textContent = truncateText(product.description, 80);
@@ -118,7 +174,7 @@ document.addEventListener("DOMContentLoaded", () => {
         rating.appendChild(stars);
         rating.appendChild(ratingCount);
 
-        // Footer (Price + Add to Cart)
+        // Footer
         const footer = document.createElement("div");
         footer.classList.add("product-card__footer");
 
@@ -135,13 +191,13 @@ document.addEventListener("DOMContentLoaded", () => {
         footer.appendChild(addBtn);
 
         // Assemble body
-        body.appendChild(title);
+        body.appendChild(titleLink);
         body.appendChild(description);
         body.appendChild(rating);
         body.appendChild(footer);
 
         // Assemble card
-        card.appendChild(imageWrapper);
+        card.appendChild(imageLink);
         card.appendChild(body);
 
         return card;
@@ -149,17 +205,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // ---- Show Loading State ----
     function showLoading() {
-        // Show skeleton loader
         if (productLoader) productLoader.style.display = "";
-
-        // Also show loading text inside the grid
         productGrid.innerHTML = "";
         const loadingMsg = document.createElement("p");
         loadingMsg.classList.add("product-grid__loading-text");
         loadingMsg.textContent = "Loading products...";
         productGrid.appendChild(loadingMsg);
-
-        // Hide error
         if (productError) productError.style.display = "none";
     }
 
@@ -177,23 +228,19 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             const response = await fetch(API_URL);
 
-            // Handle HTTP errors
             if (!response.ok) {
                 throw new Error(`HTTP Error: ${response.status} ${response.statusText}`);
             }
 
             const products = await response.json();
 
-            // Hide loader & clear loading text
             if (productLoader) productLoader.style.display = "none";
             productGrid.innerHTML = "";
 
-            // Validate response
             if (!Array.isArray(products) || products.length === 0) {
                 throw new Error("No products returned from API.");
             }
 
-            // Render each product card
             products.forEach((product, index) => {
                 const card = createProductCard(product, index);
                 productGrid.appendChild(card);
@@ -217,8 +264,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const btn = e.target.closest(".product-card__add-btn");
         if (!btn) return;
 
+        // Prevent card click navigation
+        e.preventDefault();
+        e.stopPropagation();
+
         const card = btn.closest(".product-card");
+        const productId = parseInt(card.dataset.productId);
         const productTitle = card.querySelector(".product-card__title").textContent;
+        const productPrice = parseFloat(
+            card.querySelector(".product-card__price").textContent.replace("$", "")
+        );
+        const productImage = card.querySelector(".product-card__image").src;
+
+        // Add to localStorage cart
+        addToCart({
+            id: productId,
+            title: productTitle,
+            price: productPrice,
+            image: productImage,
+        });
 
         // Visual feedback
         const originalText = btn.textContent;
@@ -235,6 +299,7 @@ document.addEventListener("DOMContentLoaded", () => {
         console.log(`🛒 Added to cart: ${productTitle}`);
     });
 
-    // ---- Initial Load ----
+    // ---- Initialize ----
+    updateCartBadge();
     fetchProducts();
 });

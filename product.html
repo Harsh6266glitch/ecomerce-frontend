@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Details — E-Shop</title>
+    <meta name="description" content="View product details, pricing, and add items to your cart.">
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+
+    <!-- ====== HEADER / NAVBAR ====== -->
+    <header class="header">
+        <div class="header__container">
+
+            <!-- Logo -->
+            <a href="index.html" class="header__logo">
+                <span class="logo-icon">🛍️</span>
+                <span class="logo-text">E-Shop</span>
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="header__nav" id="navMenu">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="index.html" class="nav__link">Home</a></li>
+                    <li class="nav__item"><a href="index.html#products" class="nav__link active">Products</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">About</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">Contact</a></li>
+                </ul>
+            </nav>
+
+            <!-- Right Actions -->
+            <div class="header__actions">
+
+                <!-- Search Bar -->
+                <div class="search-bar">
+                    <input type="text" class="search-bar__input" placeholder="Search products..."
+                        aria-label="Search products">
+                    <button class="search-bar__btn" aria-label="Search">🔍</button>
+                </div>
+
+                <!-- Cart Icon -->
+                <a href="#" class="cart" aria-label="Shopping cart">
+                    <span class="cart__icon">🛒</span>
+                    <span class="cart__badge" id="cartBadge">0</span>
+                </a>
+
+                <!-- Hamburger Menu (mobile) -->
+                <button class="hamburger" id="hamburger" aria-label="Toggle menu" aria-expanded="false">
+                    <span class="hamburger__icon">☰</span>
+                </button>
+
+            </div>
+        </div>
+    </header>
+
+    <!-- ====== PRODUCT DETAIL ====== -->
+    <main class="main">
+        <section class="product-detail" id="productDetail">
+
+            <!-- Breadcrumb -->
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <a href="index.html" class="breadcrumb__link">Home</a>
+                <span class="breadcrumb__sep">›</span>
+                <a href="index.html#products" class="breadcrumb__link">Products</a>
+                <span class="breadcrumb__sep">›</span>
+                <span class="breadcrumb__current" id="breadcrumbTitle">Loading...</span>
+            </nav>
+
+            <!-- Loading State -->
+            <div class="detail__loader" id="detailLoader">
+                <div class="detail__loader-spinner"></div>
+                <p>Loading product details...</p>
+            </div>
+
+            <!-- Error State -->
+            <div class="detail__error" id="detailError" style="display:none;">
+                <p>⚠️ Failed to load product. Please try again later.</p>
+                <a href="index.html" class="detail__back-btn">← Back to Shop</a>
+            </div>
+
+            <!-- Product Content (hidden until loaded) -->
+            <div class="detail__content" id="detailContent" style="display:none;">
+
+                <!-- Left: Image -->
+                <div class="detail__image-wrapper">
+                    <img class="detail__image" id="detailImage" src="" alt="" loading="lazy">
+                </div>
+
+                <!-- Right: Info -->
+                <div class="detail__info">
+                    <span class="detail__category" id="detailCategory"></span>
+                    <h1 class="detail__title" id="detailTitle"></h1>
+
+                    <div class="detail__rating" id="detailRating">
+                        <span class="detail__stars"></span>
+                        <span class="detail__rating-count"></span>
+                    </div>
+
+                    <p class="detail__price" id="detailPrice"></p>
+                    <p class="detail__description" id="detailDescription"></p>
+
+                    <div class="detail__actions">
+                        <button class="detail__add-btn" id="detailAddBtn">
+                            🛒 Add to Cart
+                        </button>
+                        <a href="index.html#products" class="detail__continue-btn">
+                            ← Continue Shopping
+                        </a>
+                    </div>
+
+                    <!-- Cart confirmation -->
+                    <div class="detail__confirmation" id="detailConfirmation" style="display:none;">
+                        ✅ Item added to cart!
+                    </div>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <script src="scripts/product.js"></script>
+</body>
+
+</html>
